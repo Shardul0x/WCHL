@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreativeVault - Protect Your Creative Ideas</title>
+    <meta name="description" content="Professional blockchain platform for timestamping and protecting creative ideas with Internet Computer technology">
+    <meta name="keywords" content="blockchain, creativity, IP protection, Internet Computer, patents, ideas, timestamp">
+    <meta name="author" content="CreativeVault">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://creativevault.app/">
+    <meta property="og:title" content="CreativeVault - Protect Your Creative Ideas">
+    <meta property="og:description" content="Professional blockchain platform for timestamping and protecting creative ideas">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://creativevault.app/">
+    <meta property="twitter:title" content="CreativeVault - Protect Your Creative Ideas">
+    <meta property="twitter:description" content="Professional blockchain platform for timestamping and protecting creative ideas">
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+                sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        #root {
+            min-height: 100vh;
+        }
+        
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 18px;
+        }
+        
+        .loading::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root">
+        <div class="loading">
+            Loading CreativeVault...
+        </div>
+    </div>
+    <script type="module" src="./main.jsx"></script>
+</body>
+</html>

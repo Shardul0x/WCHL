@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Decentralized creative idea timestamping platform",
   "scripts": {
-    "build": "vite build",
+   
     "start": "vite dev",
-    "prestart": "dfx generate idea_vault",
+    "build": "vite build",
     "deploy": "dfx deploy",
     "test": "echo \"No tests yet\""
   },
