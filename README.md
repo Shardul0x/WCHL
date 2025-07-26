@@ -24,7 +24,7 @@ Proof Mint is a decentralized, AI-powered proof-of-authorship engine that allows
 ### creative-vault-frontend
 Contains the React-based frontend built with Vite. Includes pages, components, styling, and integration with canisters.
 
-### creative-vault-ic
+### creative-vault-ic (Under Development)
 Houses the backend canisters deployed to the Internet Computer. This includes:
 
 - `ai.ts`: Logic for NLP-based similarity detection  
