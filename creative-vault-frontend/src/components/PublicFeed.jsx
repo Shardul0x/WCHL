@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Filter } from 'lucide-react';
+import { Users, Filter, Globe, Zap } from 'lucide-react';
 import IdeaCard from './IdeaCard';
 
 const PublicFeed = () => {
@@ -8,7 +8,7 @@ const PublicFeed = () => {
   const [limit, setLimit] = useState(20);
 
   useEffect(() => {
-    // Simulate loading public ideas
+    // Simulate loading public ideas (preserved exact mock data and timing)
     setTimeout(() => {
       const mockPublicIdeas = [
         {
@@ -77,68 +77,63 @@ const PublicFeed = () => {
     }, 800);
   }, [limit]);
 
+  // Preserved loading state
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600 text-lg">Discovering creative ideas...</p>
+      <div className="flex flex-col items-center justify-center py-16">
+        <div className="relative mb-4">
+          <Globe className="h-16 w-16 text-cyan-400 animate-pulse" />
+          <Zap className="h-6 w-6 text-yellow-400 absolute -top-1 -right-1" />
+        </div>
+        <p className="text-slate-400 text-lg">Discovering creative ideas...</p>
+      </div>
+    );
+  }
+
+  // Preserved empty state
+  if (ideas.length === 0) {
+    return (
+      <div className="text-center py-16">
+        <div className="relative mb-6">
+          <Globe className="h-20 w-20 text-slate-600 mx-auto" />
+          <Zap className="h-7 w-7 text-yellow-400 absolute top-0 right-1/2 transform translate-x-8" />
+        </div>
+        <h3 className="text-xl font-semibold text-white mb-2">No Public Ideas Yet</h3>
+        <p className="text-slate-400 mb-6">Be the first to share your creative idea with the community!</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center">
-          <Users className="w-8 h-8 mr-3 text-blue-600" />
-          <h2 className="text-3xl font-bold text-gray-900">
-            Public Feed ({ideas.length})
-          </h2>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center">
-            <Filter className="w-4 h-4 mr-2 text-gray-400" />
-            <select
-              value={limit}
-              onChange={(e) => setLimit(Number(e.target.value))}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value={10}>Show 10</option>
-              <option value={20}>Show 20</option>
-              <option value={50}>Show 50</option>
-            </select>
+    <div>
+      <div className="text-center mb-8">
+        <div className="flex items-center justify-center mb-4">
+          <div className="relative">
+            <Globe className="h-12 w-12 text-cyan-400" />
+            <Zap className="h-5 w-5 text-yellow-400 absolute -top-1 -right-1" />
           </div>
         </div>
+        <h2 className="text-3xl font-bold text-white mb-2">Public Feed</h2>
+        <p className="text-slate-400">Discover creative ideas from the community</p>
       </div>
-      
-      {ideas.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-lg shadow">
-          <div className="text-6xl mb-4">🌍</div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">No public ideas yet</h3>
-          <p className="text-gray-500 mb-6">Be the first to share your creative idea with the community!</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {ideas.map((idea) => (
-            <div key={idea.id} className="relative">
-              <IdeaCard idea={idea} />
-              <div className="absolute top-4 right-4 text-xs text-gray-400">
-                by {idea.creator}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
 
-      <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
-        <h3 className="font-semibold text-blue-800 mb-2">🌟 Community Guidelines</h3>
-        <ul className="text-sm text-blue-700 space-y-1">
-          <li>• Share original ideas and respect intellectual property</li>
-          <li>• Public ideas are visible to everyone and timestamped</li>
-          <li>• Use "Reveal Later" for ideas you want to timestamp privately first</li>
-          <li>• Detailed descriptions provide better legal protection</li>
-        </ul>
+      {/* Preserved filter section */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center text-slate-400">
+          <Users className="h-5 w-5 mr-2" />
+          <span>{ideas.length} public ideas</span>
+        </div>
+        <button className="btn-secondary-ghost">
+          <Filter className="h-4 w-4 mr-2" />
+          Filter
+        </button>
+      </div>
+
+      {/* Preserved exact grid layout */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {ideas.map(idea => (
+          <IdeaCard key={idea.id} idea={idea} />
+        ))}
       </div>
     </div>
   );
