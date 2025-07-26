@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { Shield, User, LogOut } from 'lucide-react';
+import { Shield, User, LogOut, Zap, Lock } from 'lucide-react';
 import Navigation from './components/Navigation';
 import IdeaSubmission from './components/IdeaSubmission';
 import UserIdeas from './components/UserIdeas';
 import PublicFeed from './components/PublicFeed';
 import ProofGenerator from './components/ProofGenerator';
 
+// Import your logo
+import ProofMintLogo from './pmlogo.png'; // Adjust path as needed
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState('submit');
-  const [user] = useState({
-    name: 'Demo User',
-    id: 'demo123...xyz'
-  });
+  const [user] = useState({ name: 'Demo User', id: 'demo123456789xyz' });
 
   const handleLogin = () => {
     setIsAuthenticated(true);
@@ -25,62 +25,81 @@ function App() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
-          <div className="text-center mb-8">
-            <div className="text-6xl mb-4">🔐</div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">CreativeVault</h1>
-            <p className="text-gray-600 text-lg">
-              Timestamp and protect your creative ideas
-            </p>
+      <div className="homepage-container">
+        {/* Hero Section */}
+        <div className="hero-section">
+          <div className="hero-content">
+            {/* Logo and Brand */}
+            <div className="brand-section">
+              <div className="logo-container-homepage">
+                <img src={ProofMintLogo} alt="ProofMint Logo" className="homepage-logo" />
+              </div>
+              <h1 className="brand-title">ProofMint</h1>
+              <p className="brand-tagline">Blockchain-Powered Idea Protection</p>
+            </div>
+
+            {/* Value Proposition */}
+            <div className="value-prop">
+              <h2 className="value-title">Secure Your Creative Ideas</h2>
+              <p className="value-description">
+                Timestamp and protect your intellectual property with immutable blockchain technology
+              </p>
+            </div>
+
+            {/* Call to Action */}
+            <div className="cta-section">
+              <button onClick={handleLogin} className="cta-button">
+                <Lock className="cta-icon" />
+                Connect Wallet
+              </button>
+              <p className="cta-note">Demo mode - No wallet required</p>
+            </div>
           </div>
-          
-          <div className="space-y-4 mb-8">
-            <div className="flex items-center text-sm text-gray-700">
-              <Shield className="w-5 h-5 mr-3 text-green-500" />
-              Immutable timestamping
+
+          {/* Features */}
+          <div className="features-grid">
+            <div className="feature-card">
+              <Shield className="feature-icon" />
+              <h3 className="feature-title">Blockchain Secured</h3>
+              <p className="feature-desc">Immutable timestamps on decentralized networks</p>
             </div>
-            <div className="flex items-center text-sm text-gray-700">
-              <Shield className="w-5 h-5 mr-3 text-green-500" />
-              Privacy controls
+            <div className="feature-card">
+              <Zap className="feature-icon" />
+              <h3 className="feature-title">AI Enhanced</h3>
+              <p className="feature-desc">Intelligent content analysis and protection</p>
             </div>
-            <div className="flex items-center text-sm text-gray-700">
-              <Shield className="w-5 h-5 mr-3 text-green-500" />
-              Verifiable proof generation
+            <div className="feature-card">
+              <Lock className="feature-icon" />
+              <h3 className="feature-title">Privacy First</h3>
+              <p className="feature-desc">Your ideas remain private until you choose to reveal</p>
             </div>
           </div>
-          
-          <button
-            onClick={handleLogin}
-            className="w-full btn-primary text-lg py-4"
-          >
-            Connect Wallet (Demo)
-          </button>
-          
-          <p className="text-xs text-gray-500 text-center mt-4">
-            * This is a demo version - no actual blockchain connection
-          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        user={user}
-        onLogout={handleLogout}
-      />
-
-      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <div className="animate-fade-in">
-          {activeTab === 'submit' && <IdeaSubmission />}
-          {activeTab === 'my-ideas' && <UserIdeas />}
-          {activeTab === 'feed' && <PublicFeed />}
-          {activeTab === 'proof' && <ProofGenerator />}
+    <div className="app-container">
+      {/* Header */}
+      <header className="app-header">
+        <div className="header-content">
+          <div className="header-brand">
+            <img src={ProofMintLogo} alt="ProofMint Logo" className="header-logo" />
+            <span className="header-title">ProofMint</span>
+          </div>
         </div>
+      </header>
+
+      {/* Navigation */}
+      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} onLogout={handleLogout} />
+
+      {/* Main Content */}
+      <main className="app-main">
+        {activeTab === 'submit' && <IdeaSubmission />}
+        {activeTab === 'my-ideas' && <UserIdeas />}
+        {activeTab === 'feed' && <PublicFeed />}
+        {activeTab === 'proof' && <ProofGenerator />}
       </main>
     </div>
   );
