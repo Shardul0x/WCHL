@@ -36,6 +36,37 @@ Houses the backend canisters deployed to the Internet Computer. This includes:
 
 ---
 
+## Installation
+
+### Backend Setup
+
+1. Install [DFX SDK](https://internetcomputer.org/docs/current/developer-docs/build/sdk/quickstart).
+
+2. Start the local replica:
+   ```bash
+   dfx start --background
+   
+3. Deploy the backend:
+    ```bash
+    cd creative-vault-ic
+    dfx deploy
+
+### Frontend Setup
+
+1. Navigate to the frontend folder:
+    ```bash
+    cd creative-vault-frontend
+
+2. Install dependencies:
+    ```bash
+   npm install
+
+3. Run the app:
+    ```bash
+    npm run dev
+
+---
+
 ## Tech Stack
 
 - NLP Embeddings: MiniLM / BERT (for semantic matching)  
