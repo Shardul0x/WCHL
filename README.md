@@ -100,10 +100,10 @@ Houses the backend canisters deployed to the Internet Computer. This includes:
 
 ## Contributors
 
-- **Shambhavi Raj** – Frontend Development, Backend Integration, Project Architecture  
-- **Shardul Bangale** – Backend Development, Frontend Integration, DAO Logic  
-- **Arya Kuwar** – Backend Development, NFT Minting Module (DIP-721)  
-- **Swayam Kamble** – UI Testing, Documentation Support
+- **Shambhavi Raj** – Frontend Development, Blockchain Canisters, Internet Identity, Deployment  
+- **Shardul Bangale** – Frontend Development, DAO Backend Logic, Canister Implementation  
+- **Arya Kuwar** – Backend Development, Soulbound NFT Minting (DIP-721)  
+- **Swayam Kamble** – UI Testing, README Documentation
 
 ---
 
