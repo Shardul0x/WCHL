@@ -1,149 +1,108 @@
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthClient } from '@dfinity/auth-client';
-import { Actor, HttpAgent } from '@dfinity/agent';
-import { createActor } from '../../declarations/idea_vault';
-import toast from 'react-hot-toast';
-
-// Components
-import Layout from './components/Layout';
-import Dashboard from './components/Dashboard';
+import React, { useState } from 'react';
+import { Shield, User, LogOut, Zap, Lock } from 'lucide-react';
+import Navigation from './components/Navigation';
 import IdeaSubmission from './components/IdeaSubmission';
 import UserIdeas from './components/UserIdeas';
 import PublicFeed from './components/PublicFeed';
 import ProofGenerator from './components/ProofGenerator';
-import Search from './components/Search';
-import Profile from './components/Profile';
-import LoadingScreen from './components/LoadingScreen';
 
-// Hooks & Utils
-import { useAuthStore } from './store/authStore';
-import { useIdeaStore } from './store/ideaStore';
+// Import your logo
+import ProofMintLogo from './pmlogo.png'; // Adjust path as needed
 
 function App() {
-  const [loading, setLoading] = useState(true);
-  const { 
-    isAuthenticated, 
-    principal, 
-    actor,
-    login, 
-    logout, 
-    initialize 
-  } = useAuthStore();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTab, setActiveTab] = useState('submit');
+  const [user] = useState({ name: 'Demo User', id: 'demo123456789xyz' });
 
-  useEffect(() => {
-    initializeApp();
-  }, []);
-
-  const initializeApp = async () => {
-    try {
-      setLoading(true);
-      await initialize();
-    } catch (error) {
-      console.error('Failed to initialize app:', error);
-      toast.error('Failed to initialize application');
-    } finally {
-      setLoading(false);
-    }
+  const handleLogin = () => {
+    setIsAuthenticated(true);
   };
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setActiveTab('submit');
+  };
 
   if (!isAuthenticated) {
-    return <LoginScreen onLogin={login} />;
+    return (
+      <div className="homepage-container">
+        {/* Hero Section */}
+        <div className="hero-section">
+          <div className="hero-content">
+            {/* Logo and Brand */}
+            <div className="brand-section">
+              <div className="logo-container-homepage">
+                <img src={ProofMintLogo} alt="ProofMint Logo" className="homepage-logo" />
+              </div>
+              <h1 className="brand-title">ProofMint</h1>
+              <p className="brand-tagline">Blockchain-Powered Idea Protection</p>
+            </div>
+
+            {/* Value Proposition */}
+            <div className="value-prop">
+              <h2 className="value-title">Secure Your Creative Ideas</h2>
+              <p className="value-description">
+                Timestamp and protect your intellectual property with immutable blockchain technology
+              </p>
+            </div>
+
+            {/* Call to Action */}
+            <div className="cta-section">
+              <button onClick={handleLogin} className="cta-button">
+                <Lock className="cta-icon" />
+                Connect Wallet
+              </button>
+              <p className="cta-note">Demo mode - No wallet required</p>
+            </div>
+          </div>
+
+          {/* Features */}
+          <div className="features-grid">
+            <div className="feature-card">
+              <Shield className="feature-icon" />
+              <h3 className="feature-title">Blockchain Secured</h3>
+              <p className="feature-desc">Immutable timestamps on decentralized networks</p>
+            </div>
+            <div className="feature-card">
+              <Zap className="feature-icon" />
+              <h3 className="feature-title">AI Enhanced</h3>
+              <p className="feature-desc">Intelligent content analysis and protection</p>
+            </div>
+            <div className="feature-card">
+              <Lock className="feature-icon" />
+              <h3 className="feature-title">Privacy First</h3>
+              <p className="feature-desc">Your ideas remain private until you choose to reveal</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Layout>
-      <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/submit" element={<IdeaSubmission />} />
-        <Route path="/ideas" element={<UserIdeas />} />
-        <Route path="/feed" element={<PublicFeed />} />
-        <Route path="/proof" element={<ProofGenerator />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
-    </Layout>
-  );
-}
-
-const LoginScreen = ({ onLogin }) => {
-  const [loggingIn, setLoggingIn] = useState(false);
-
-  const handleLogin = async () => {
-    setLoggingIn(true);
-    try {
-      await onLogin();
-    } catch (error) {
-      toast.error('Login failed. Please try again.');
-    } finally {
-      setLoggingIn(false);
-    }
-  };
-
-  return (
-    <div className="min-h-screen gradient-bg flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full animate-fade-in">
-        <div className="text-center mb-8">
-          <div className="text-6xl mb-4 animate-bounce-subtle">🔐</div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            <span className="gradient-text">CreativeVault</span>
-          </h1>
-          <p className="text-gray-600 text-lg">
-            Professional IP Protection Platform
-          </p>
-        </div>
-        
-        <div className="space-y-4 mb-8">
-          <div className="flex items-center text-sm text-gray-700">
-            <div className="w-5 h-5 mr-3 text-green-500">✅</div>
-            Blockchain timestamping & proof
-          </div>
-          <div className="flex items-center text-sm text-gray-700">
-            <div className="w-5 h-5 mr-3 text-green-500">✅</div>
-            Legal IP protection certificates
-          </div>
-          <div className="flex items-center text-sm text-gray-700">
-            <div className="w-5 h-5 mr-3 text-green-500">✅</div>
-            Quantum-resistant security
-          </div>
-          <div className="flex items-center text-sm text-gray-700">
-            <div className="w-5 h-5 mr-3 text-green-500">✅</div>
-            Decentralized storage (IPFS)
+    <div className="app-container">
+      {/* Header */}
+      <header className="app-header">
+        <div className="header-content">
+          <div className="header-brand">
+            <img src={ProofMintLogo} alt="ProofMint Logo" className="header-logo" />
+            <span className="header-title">ProofMint</span>
           </div>
         </div>
-        
-        <button
-          onClick={handleLogin}
-          disabled={loggingIn}
-          className="w-full btn-primary text-lg py-4 mb-4"
-        >
-          {loggingIn ? (
-            <span className="flex items-center justify-center">
-              <div className="loading-spinner h-5 w-5 mr-2"></div>
-              Connecting...
-            </span>
-          ) : (
-            'Connect with Internet Identity'
-          )}
-        </button>
-        
-        <div className="text-center">
-          <p className="text-xs text-gray-500">
-            Powered by Internet Computer Protocol
-          </p>
-          <p className="text-xs text-gray-400 mt-1">
-            Your ideas, secured by blockchain technology
-          </p>
-        </div>
-      </div>
+      </header>
+
+      {/* Navigation */}
+      <Navigation activeTab={activeTab} setActiveTab={setActiveTab} user={user} onLogout={handleLogout} />
+
+      {/* Main Content */}
+      <main className="app-main">
+        {activeTab === 'submit' && <IdeaSubmission />}
+        {activeTab === 'my-ideas' && <UserIdeas />}
+        {activeTab === 'feed' && <PublicFeed />}
+        {activeTab === 'proof' && <ProofGenerator />}
+      </main>
     </div>
   );
-};
+}
 
 export default App;

@@ -4,47 +4,37 @@ import path from 'path';
 
 export default defineConfig({
   plugins: [react()],
-  define: {
-    global: 'globalThis',
-    'process.env': process.env,
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@utils': path.resolve(__dirname, './src/utils'),
-      '@store': path.resolve(__dirname, './src/store'),
-    },
-  },
-  root: 'src/creative_vault_frontend/src',
+  root: 'src/creative_vault_frontend',
   build: {
-    outDir: '../../../dist/creative_vault_frontend',
+    outDir: '../../dist/creative_vault_frontend',
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom'],
-          dfinity: ['@dfinity/agent', '@dfinity/auth-client', '@dfinity/candid'],
+          icons: ['lucide-react'],
+          router: ['react-router-dom'],
+          forms: ['react-hook-form'],
+          toast: ['react-hot-toast'],
+          state: ['zustand']
         },
       },
     },
   },
-  server: {
-    port: 3000,
-    proxy: {
-      '/api': {
-        target: 'http://127.0.0.1:4943',
-        changeOrigin: true,
-      },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src/creative_vault_frontend/src'),
     },
   },
+  server: {
+    port: 3000,
+    host: true,
+  },
+  define: {
+    global: 'globalThis',
+  },
   optimizeDeps: {
-    esbuildOptions: {
-      define: {
-        global: 'globalThis',
-      },
-    },
+    include: ['react', 'react-dom', 'lucide-react'],
   },
 });

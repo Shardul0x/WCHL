@@ -1,34 +1,80 @@
 import { create } from 'zustand';
+import { AuthClient } from '@dfinity/auth-client';
+import { createActor } from '../../../declarations/idea_vault';
+import toast from 'react-hot-toast';
 
 export const useAuthStore = create((set, get) => ({
   isAuthenticated: false,
   principal: null,
   actor: null,
-  loading: false,
+  loading: true,
 
   initialize: async () => {
-    // Mock initialization
-    set({ loading: false });
+    try {
+      const authClient = await AuthClient.create();
+      const isAuthenticated = await authClient.isAuthenticated();
+      const identity = authClient.getIdentity();
+      const principal = identity.getPrincipal();
+
+      // Ensure this environment variable is available. DFX generates it.
+      const canisterId = "u6s2n-gx777-77774-qaaba-cai";
+      if (!canisterId) {
+        throw new Error("CANISTER_ID_IDEA_VAULT is not set in environment variables.");
+      }
+
+      const actor = createActor(canisterId, {
+        agentOptions: {
+          identity,
+        },
+      });
+
+      set({
+        isAuthenticated,
+        principal,
+        actor,
+        loading: false,
+      });
+    } catch (error) {
+      toast.error(`Initialization failed: ${error.message}`);
+      set({ loading: false });
+    }
   },
 
   login: async () => {
     set({ loading: true });
-    // Mock login
-    setTimeout(() => {
-      set({
-        isAuthenticated: true,
-        principal: { toString: () => 'demo-principal-123' },
-        actor: {},
-        loading: false
+    try {
+      const authClient = await AuthClient.create();
+      await new Promise((resolve, reject) => {
+        authClient.login({
+          identityProvider:
+            process.env.DFX_NETWORK === "ic"
+              ? "https://identity.ic0.app/#authorize"
+              : `http://localhost:4943?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}`,
+          onSuccess: resolve,
+          onError: reject,
+        });
       });
-    }, 1000);
+      // After a successful login, re-initialize to get the new identity and actor
+      await get().initialize();
+      toast.success('Login successful!');
+    } catch (error) {
+      toast.error('Login failed. Please try again.');
+      set({ loading: false });
+    }
   },
 
   logout: async () => {
-    set({
-      isAuthenticated: false,
-      principal: null,
-      actor: null,
-    });
+    try {
+      const authClient = await AuthClient.create();
+      await authClient.logout();
+      set({
+        isAuthenticated: false,
+        principal: null,
+        actor: null,
+      });
+      toast.success('Logged out successfully.');
+    } catch (error) {
+      toast.error('Logout failed.');
+    }
   },
 }));

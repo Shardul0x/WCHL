@@ -10,11 +10,10 @@
         "idea_vault"
       ],
       "frontend": {
-        "entrypoint": "src/creative_vault_frontend/src/index.html"
+        "entrypoint": "src/creative_vault_frontend/index.html"
       },
       "source": [
-        "src/creative_vault_frontend/assets",
-        "src/creative_vault_frontend/src"
+        "src/creative_vault_frontend/"
       ],
       "type": "assets"
     }
