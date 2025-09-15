@@ -17,7 +17,7 @@ export const useAuthStore = create((set, get) => ({
       const principal = identity.getPrincipal();
 
       // Ensure this environment variable is available. DFX generates it.
-      const canisterId = "u6s2n-gx777-77774-qaaba-cai";
+      const canisterId = process.env.CANISTER_ID_IDEA_VAULT;
       if (!canisterId) {
         throw new Error("CANISTER_ID_IDEA_VAULT is not set in environment variables.");
       }

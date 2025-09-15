@@ -1,40 +1,27 @@
-import { defineConfig } from 'vite';
+import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-export default defineConfig({
-  plugins: [react()],
-  root: 'src/creative_vault_frontend',
-  build: {
-    outDir: '../../dist/creative_vault_frontend',
-    emptyOutDir: true,
-    sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom'],
-          icons: ['lucide-react'],
-          router: ['react-router-dom'],
-          forms: ['react-hook-form'],
-          toast: ['react-hot-toast'],
-          state: ['zustand']
-        },
-      },
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '');
+
+  return {
+    plugins: [react()],
+    root: 'src/creative_vault_frontend',
+    build: {
+      outDir: '../../dist/creative_vault_frontend',
+      emptyOutDir: true,
     },
-  },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, 'src/creative_vault_frontend/src'),
+    server: {
+      port: 3000,
+      host: true,
+      // NO PROXY
     },
-  },
-  server: {
-    port: 3000,
-    host: true,
-  },
-  define: {
-    global: 'globalThis',
-  },
-  optimizeDeps: {
-    include: ['react', 'react-dom', 'lucide-react'],
-  },
+    define: {
+      global: 'globalThis',
+      'process.env.CANISTER_ID_IDEA_VAULT': JSON.stringify(env.CANISTER_ID_IDEA_VAULT),
+      'process.env.CANISTER_ID_INTERNET_IDENTITY': JSON.stringify(env.CANISTER_ID_INTERNET_IDENTITY),
+      'process.env.DFX_NETWORK': JSON.stringify(env.DFX_NETWORK || 'local'),
+    },
+  };
 });
