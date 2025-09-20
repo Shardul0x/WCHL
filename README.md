@@ -7,7 +7,7 @@
 Proof Mint is a decentralized, AI-powered proof-of-authorship engine that allows innovators to permanently timestamp and protect their creative ideas on the **Internet Computer (ICP)** blockchain. From text and code to sketches and startup concepts—users can safeguard their originality with a soulbound NFT minted only after a semantic originality check.
 
 ---
-(Know about ProofMint in 1 click! - https://proofmintinfo.tiiny.site)
+(Know about ProofMint in 1 click! - [https://proofmint.tiiny.site])
 ---
 
 ## Features
