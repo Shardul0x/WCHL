@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="creative-vault-frontend/src/pmlogo-2.png" alt="ProofMint Logo" width="200"/>
+  <img src="creativevault_production/src/creative-vault-frontend/src/pmlogo-2.png" alt="ProofMint Logo" width="200"/>
 </p>
 
 <h1 align="center">Proof Mint - Securing Creativity with Technology</h1>
