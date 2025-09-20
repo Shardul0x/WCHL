@@ -2,10 +2,12 @@
   <img src="creativevault-production/src/creative_vault_frontend/src/pmlogo-2.png" alt="ProofMint Logo" width="200"/>
 </p>
 
-<h1 align="center">Proof Mint - Securing Creativity with Technology</h1>
+<h1 align="center">ProofMint - Securing Creativity with Technology</h1>
 
 Proof Mint is a decentralized, AI-powered proof-of-authorship engine that allows innovators to permanently timestamp and protect their creative ideas on the **Internet Computer (ICP)** blockchain. From text and code to sketches and startup concepts—users can safeguard their originality with a soulbound NFT minted only after a semantic originality check.
 
+---
+(Know about ProofMint in 1 click! - https://proofmintinfo.tiiny.site)
 ---
 
 ## Features
