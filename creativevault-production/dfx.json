@@ -6,12 +6,14 @@
       "main": "src/idea_vault/main.mo"
     },
     "creative_vault_frontend": {
-      "dependencies": ["idea_vault"],
+      "dependencies": [
+        "idea_vault"
+      ],
       "frontend": {
         "entrypoint": "src/creative_vault_frontend/index.html"
       },
       "source": [
-        "dist/creative_vault_frontend/"
+        "src/creative_vault_frontend/"
       ],
       "type": "assets"
     }
@@ -20,6 +22,14 @@
     "local": {
       "bind": "127.0.0.1:4944",
       "type": "ephemeral"
+    },
+    "ic": {
+      "providers": ["https://ic0.app"],
+      "type": "persistent"
+    },
+    "testnet": {
+      "providers": ["https://ic0.app"],
+      "type": "persistent"
     }
   },
   "defaults": {

@@ -19,8 +19,8 @@ export const useIdeaStore = create((set, get) => ({
       const result = await actor.submitIdea(ideaData);
       if ('ok' in result) {
         toast.success(`Idea secured! ID: ${result.ok}`, { id: toastId });
-        get().loadUserIdeas(actor); // Refresh user ideas after submission
-        get().loadStats(actor); // Refresh stats
+        get().loadUserIdeas(actor);
+        get().loadStats(actor);
         return result.ok;
       } else {
         throw new Error(result.err);
@@ -43,12 +43,12 @@ export const useIdeaStore = create((set, get) => ({
       set({ loading: false });
     }
   },
-  
+
   loadPublicIdeas: async (actor) => {
     if (!actor) return;
     set({ loading: true });
     try {
-        const feed = await actor.getPublicFeed([], [], []); // No filters
+        const feed = await actor.getPublicFeed([], [], []);
         set({ publicIdeas: feed, loading: false });
     } catch (error) {
         toast.error(`Failed to load public feed: ${error.message}`);
@@ -60,14 +60,14 @@ export const useIdeaStore = create((set, get) => ({
     if (!actor) return;
     try {
       const platformStats = await actor.getStats();
-      // Convert BigInts from Motoko to Numbers for JavaScript
       const formattedStats = {
         totalIdeas: Number(platformStats.totalIdeas),
         publicIdeas: Number(platformStats.publicIdeas),
         totalUsers: Number(platformStats.totalUsers),
       };
       set({ stats: formattedStats });
-    } catch (error) {
+    } catch (error)
+    {
       toast.error(`Failed to load platform stats: ${error.message}`);
     }
   },

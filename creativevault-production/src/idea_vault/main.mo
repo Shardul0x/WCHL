@@ -13,15 +13,15 @@ import Nat "mo:base/Nat";
 import Char "mo:base/Char";
 import Nat32 "mo:base/Nat32";
 
-actor CreativeVault {
-    
+persistent actor CreativeVault  {
+
     // Types
     public type IdeaStatus = {
         #Public;
         #Private;
         #RevealLater;
     };
-    
+
     public type Idea = {
         id: Text;
         title: Text;
@@ -37,7 +37,7 @@ actor CreativeVault {
         tags: [Text];
         category: Text;
     };
-    
+
     public type IdeaInput = {
         title: Text;
         description: Text;
@@ -46,7 +46,7 @@ actor CreativeVault {
         tags: [Text];
         category: Text;
     };
-    
+
     public type ProofRecord = {
         ideaId: Text;
         proofHash: Text;
@@ -76,20 +76,20 @@ actor CreativeVault {
         currentSignatures: [(Principal, Int)];
         isFinalized: Bool;
     };
-    
+
     // Stable storage
     private stable var nextIdeaId: Nat = 0;
     private stable var ideasEntries: [(Text, Idea)] = [];
     private stable var userIdeasEntries: [(Principal, [Text])] = [];
     private stable var userProfilesEntries: [(Principal, UserProfile)] = [];
     private stable var collaborativeIdeasEntries: [(Text, CollaborativeIdea)] = [];
-    
-    // Runtime storage
-    private var ideas = Map.HashMap<Text, Idea>(100, Text.equal, Text.hash);
-    private var userIdeas = Map.HashMap<Principal, [Text]>(50, Principal.equal, Principal.hash);
-    private var userProfiles = Map.HashMap<Principal, UserProfile>(50, Principal.equal, Principal.hash);
-    private var collaborativeIdeas = Map.HashMap<Text, CollaborativeIdea>(20, Text.equal, Text.hash);
-    
+
+    // Runtime storage (FIX: Added 'transient' keyword)
+    private transient var ideas = Map.HashMap<Text, Idea>(100, Text.equal, Text.hash);
+    private transient var userIdeas = Map.HashMap<Principal, [Text]>(50, Principal.equal, Principal.hash);
+    private transient var userProfiles = Map.HashMap<Principal, UserProfile>(50, Principal.equal, Principal.hash);
+    private transient var collaborativeIdeas = Map.HashMap<Text, CollaborativeIdea>(20, Text.equal, Text.hash);
+
     // System upgrade hooks
     system func preupgrade() {
         ideasEntries := Iter.toArray(ideas.entries());
@@ -97,23 +97,23 @@ actor CreativeVault {
         userProfilesEntries := Iter.toArray(userProfiles.entries());
         collaborativeIdeasEntries := Iter.toArray(collaborativeIdeas.entries());
     };
-    
+
     system func postupgrade() {
         ideas := Map.fromIter<Text, Idea>(ideasEntries.vals(), ideasEntries.size(), Text.equal, Text.hash);
         userIdeas := Map.fromIter<Principal, [Text]>(userIdeasEntries.vals(), userIdeasEntries.size(), Principal.equal, Principal.hash);
         userProfiles := Map.fromIter<Principal, UserProfile>(userProfilesEntries.vals(), userProfilesEntries.size(), Principal.equal, Principal.hash);
         collaborativeIdeas := Map.fromIter<Text, CollaborativeIdea>(collaborativeIdeasEntries.vals(), collaborativeIdeasEntries.size(), Text.equal, Text.hash);
-        
+
         ideasEntries := [];
         userIdeasEntries := [];
         userProfilesEntries := [];
         collaborativeIdeasEntries := [];
     };
-    
+
     // Create or update user profile
     public shared(msg) func createUserProfile(username: ?Text, email: ?Text): async Result.Result<UserProfile, Text> {
         let caller = msg.caller;
-        
+
         let profile: UserProfile = switch (userProfiles.get(caller)) {
             case (?existingProfile) {
                 {
@@ -138,30 +138,30 @@ actor CreativeVault {
                 }
             };
         };
-        
+
         userProfiles.put(caller, profile);
         #ok(profile)
     };
-    
+
     // Submit new idea
     public shared(msg) func submitIdea(input: IdeaInput): async Result.Result<Text, Text> {
         let caller = msg.caller;
-        
+
         // Validate input
         if (Text.size(input.title) == 0 or Text.size(input.title) > 100) {
             return #err("Title must be between 1 and 100 characters");
         };
-        
+
         if (Text.size(input.description) == 0 or Text.size(input.description) > 5000) {
             return #err("Description must be between 1 and 5000 characters");
         };
-        
+
         let ideaId = "idea_" # Nat.toText(nextIdeaId);
         nextIdeaId += 1;
-        
+
         let now = Time.now();
         let proofHash = generateProofHash(ideaId, input.title, input.description, caller, now);
-        
+
         let idea: Idea = {
             id = ideaId;
             title = input.title;
@@ -177,34 +177,34 @@ actor CreativeVault {
             tags = input.tags;
             category = input.category;
         };
-        
+
         ideas.put(ideaId, idea);
-        
+
         // Update user's ideas list
         let currentUserIdeas = Option.get(userIdeas.get(caller), []);
         userIdeas.put(caller, Array.append(currentUserIdeas, [ideaId]));
-        
+
         // Update user profile
         await updateUserStats(caller, input.status == #Public);
-        
+
         #ok(ideaId)
     };
-    
+
     // Reveal previously private idea
     public shared(msg) func revealIdea(ideaId: Text): async Result.Result<(), Text> {
         let caller = msg.caller;
-        
+
         switch (ideas.get(ideaId)) {
             case null { #err("Idea not found") };
             case (?idea) {
                 if (idea.creator != caller) {
                     return #err("Not authorized to reveal this idea");
                 };
-                
+
                 if (idea.isRevealed) {
                     return #err("Idea is already revealed");
                 };
-                
+
                 let updatedIdea: Idea = {
                     id = idea.id;
                     title = idea.title;
@@ -220,29 +220,29 @@ actor CreativeVault {
                     tags = idea.tags;
                     category = idea.category;
                 };
-                
+
                 ideas.put(ideaId, updatedIdea);
                 await updateUserStats(caller, true);
                 #ok()
             };
         }
     };
-    
+
     // Update idea (by creator only)
     public shared(msg) func updateIdea(ideaId: Text, newDescription: Text, newTags: [Text]): async Result.Result<(), Text> {
         let caller = msg.caller;
-        
+
         switch (ideas.get(ideaId)) {
             case null { #err("Idea not found") };
             case (?idea) {
                 if (idea.creator != caller) {
                     return #err("Not authorized to update this idea");
                 };
-                
+
                 if (Text.size(newDescription) == 0 or Text.size(newDescription) > 5000) {
                     return #err("Description must be between 1 and 5000 characters");
                 };
-                
+
                 let updatedIdea: Idea = {
                     id = idea.id;
                     title = idea.title;
@@ -258,28 +258,28 @@ actor CreativeVault {
                     tags = newTags;
                     category = idea.category;
                 };
-                
+
                 ideas.put(ideaId, updatedIdea);
                 #ok()
             };
         }
     };
-    
+
     // Get user's ideas
     public query(msg) func getUserIdeas(): async [Idea] {
         let caller = msg.caller;
         let userIdeaIds = Option.get(userIdeas.get(caller), []);
-        
+
         Array.mapFilter<Text, Idea>(userIdeaIds, func(id) {
             ideas.get(id)
         })
     };
-    
+
     // Get public feed with filtering
     public query func getPublicFeed(limit: ?Nat, category: ?Text, tags: [Text]): async [Idea] {
         let maxLimit = Option.get(limit, 20);
         let allIdeas = Iter.toArray(ideas.vals());
-        
+
         // Filter public ideas
         var filteredIdeas = Array.filter<Idea>(allIdeas, func(idea) {
             (idea.status == #Public or idea.isRevealed) and
@@ -293,25 +293,25 @@ actor CreativeVault {
                 }))
             })
         });
-        
+
         // Sort by timestamp (newest first)
         let sortedIdeas = Array.sort<Idea>(filteredIdeas, func(a, b) {
             if (a.timestamp > b.timestamp) #less
             else if (a.timestamp < b.timestamp) #greater
             else #equal
         });
-        
+
         if (sortedIdeas.size() <= maxLimit) {
             sortedIdeas
         } else {
             Array.subArray(sortedIdeas, 0, maxLimit)
         }
     };
-    
+
     // Get idea by ID (with permission check)
     public query(msg) func getIdea(ideaId: Text): async Result.Result<Idea, Text> {
         let caller = msg.caller;
-        
+
         switch (ideas.get(ideaId)) {
             case null { #err("Idea not found") };
             case (?idea) {
@@ -323,7 +323,7 @@ actor CreativeVault {
             };
         }
     };
-    
+
     // Generate verifiable proof record
     public query func getProofRecord(ideaId: Text): async Result.Result<ProofRecord, Text> {
         switch (ideas.get(ideaId)) {
@@ -343,7 +343,7 @@ actor CreativeVault {
             };
         }
     };
-    
+
     // Verify idea authenticity
     public query func verifyIdea(ideaId: Text, expectedHash: Text): async Bool {
         switch (ideas.get(ideaId)) {
@@ -351,7 +351,7 @@ actor CreativeVault {
             case (?idea) { idea.proofHash == expectedHash };
         }
     };
-    
+
     // Get user profile
     public query(msg) func getUserProfile(): async Result.Result<UserProfile, Text> {
         let caller = msg.caller;
@@ -360,62 +360,62 @@ actor CreativeVault {
             case (?profile) { #ok(profile) };
         }
     };
-    
+
     // Search ideas
     public query func searchIdeas(searchTerm: Text, limit: ?Nat): async [Idea] {
         let maxLimit = Option.get(limit, 10);
         let allIdeas = Iter.toArray(ideas.vals());
         let searchLower = Text.toLowercase(searchTerm);
-        
+
         let matchingIdeas = Array.filter<Idea>(allIdeas, func(idea) {
             (idea.status == #Public or idea.isRevealed) and (
                 Text.contains(Text.toLowercase(idea.title), #text searchLower) or
                 Text.contains(Text.toLowercase(idea.description), #text searchLower)
             )
         });
-        
+
         let sortedResults = Array.sort<Idea>(matchingIdeas, func(a, b) {
             if (a.timestamp > b.timestamp) #less
             else if (a.timestamp < b.timestamp) #greater
             else #equal
         });
-        
+
         if (sortedResults.size() <= maxLimit) {
             sortedResults
         } else {
             Array.subArray(sortedResults, 0, maxLimit)
         }
     };
-    
+
     // Get statistics
     public query func getStats(): async {totalIdeas: Nat; publicIdeas: Nat; totalUsers: Nat} {
         let allIdeas = Iter.toArray(ideas.vals());
         let publicCount = Array.filter<Idea>(allIdeas, func(idea) {
             idea.status == #Public or idea.isRevealed
         }).size();
-        
+
         {
             totalIdeas = allIdeas.size();
             publicIdeas = publicCount;
             totalUsers = Iter.toArray(userProfiles.vals()).size();
         }
     };
-    
+
     // Create collaborative idea
     public shared(msg) func createCollaborativeIdea(
-        ideaId: Text, 
-        collaborators: [Principal], 
+        ideaId: Text,
+        collaborators: [Principal],
         requiredSignatures: Nat
     ): async Result.Result<(), Text> {
         let caller = msg.caller;
-        
+
         switch (ideas.get(ideaId)) {
             case null { #err("Idea not found") };
             case (?idea) {
                 if (idea.creator != caller) {
                     return #err("Only idea creator can make it collaborative");
                 };
-                
+
                 let collaborative: CollaborativeIdea = {
                     ideaId = ideaId;
                     collaborators = Array.append([caller], collaborators);
@@ -424,31 +424,31 @@ actor CreativeVault {
                     currentSignatures = [(caller, Time.now())];
                     isFinalized = false;
                 };
-                
+
                 collaborativeIdeas.put(ideaId, collaborative);
                 #ok()
             };
         }
     };
-    
+
     // Sign collaborative idea
     public shared(msg) func signCollaborativeIdea(ideaId: Text): async Result.Result<(), Text> {
         let caller = msg.caller;
-        
+
         switch (collaborativeIdeas.get(ideaId)) {
             case null { #err("Collaborative idea not found") };
             case (?collab) {
                 if (Option.isNull(Array.find<Principal>(collab.collaborators, func(p) { p == caller }))) {
                     return #err("Not a collaborator on this idea");
                 };
-                
+
                 if (Option.isSome(Array.find<(Principal, Int)>(collab.currentSignatures, func((p, _)) { p == caller }))) {
                     return #err("Already signed");
                 };
-                
+
                 let newSignatures = Array.append(collab.currentSignatures, [(caller, Time.now())]);
                 let isFinalized = newSignatures.size() >= collab.requiredSignatures;
-                
+
                 let updatedCollab: CollaborativeIdea = {
                     ideaId = collab.ideaId;
                     collaborators = collab.collaborators;
@@ -457,13 +457,13 @@ actor CreativeVault {
                     currentSignatures = newSignatures;
                     isFinalized = isFinalized;
                 };
-                
+
                 collaborativeIdeas.put(ideaId, updatedCollab);
                 #ok()
             };
         }
     };
-    
+
     // Helper functions
     private func updateUserStats(user: Principal, isPublic: Bool): async () {
         switch (userProfiles.get(user)) {
@@ -493,7 +493,7 @@ actor CreativeVault {
             };
         }
     };
-    
+
     private func generateProofHash(id: Text, title: Text, description: Text, creator: Principal, timestamp: Int): Text {
         let content = id # title # description # Principal.toText(creator) # Int.toText(timestamp);
         let hash = Text.hash(content);

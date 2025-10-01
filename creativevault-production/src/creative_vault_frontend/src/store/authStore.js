@@ -16,7 +16,6 @@ export const useAuthStore = create((set, get) => ({
       const identity = authClient.getIdentity();
       const principal = identity.getPrincipal();
 
-      // Ensure this environment variable is available. DFX generates it.
       const canisterId = process.env.CANISTER_ID_IDEA_VAULT;
       if (!canisterId) {
         throw new Error("CANISTER_ID_IDEA_VAULT is not set in environment variables.");
@@ -54,7 +53,6 @@ export const useAuthStore = create((set, get) => ({
           onError: reject,
         });
       });
-      // After a successful login, re-initialize to get the new identity and actor
       await get().initialize();
       toast.success('Login successful!');
     } catch (error) {
