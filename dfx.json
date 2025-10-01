@@ -26,10 +26,6 @@
     "ic": {
       "providers": ["https://ic0.app"],
       "type": "persistent"
-    },
-    "testnet": {
-      "providers": ["https://ic0.app"],
-      "type": "persistent"
     }
   },
   "defaults": {

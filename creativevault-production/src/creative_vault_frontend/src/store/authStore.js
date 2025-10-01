@@ -16,23 +16,14 @@ export const useAuthStore = create((set, get) => ({
       const identity = authClient.getIdentity();
       const principal = identity.getPrincipal();
 
-      const canisterId = process.env.CANISTER_ID_IDEA_VAULT;
-      if (!canisterId) {
-        throw new Error("CANISTER_ID_IDEA_VAULT is not set in environment variables.");
-      }
+      const canisterId = process.env.REACT_APP_IDEA_VAULT_CANISTER;
+      if (!canisterId) throw new Error("REACT_APP_IDEA_VAULT_CANISTER not set");
 
       const actor = createActor(canisterId, {
-        agentOptions: {
-          identity,
-        },
+        agentOptions: { identity },
       });
 
-      set({
-        isAuthenticated,
-        principal,
-        actor,
-        loading: false,
-      });
+      set({ isAuthenticated, principal, actor, loading: false });
     } catch (error) {
       toast.error(`Initialization failed: ${error.message}`);
       set({ loading: false });
@@ -46,16 +37,16 @@ export const useAuthStore = create((set, get) => ({
       await new Promise((resolve, reject) => {
         authClient.login({
           identityProvider:
-            process.env.DFX_NETWORK === "ic"
+            process.env.REACT_APP_DFX_NETWORK === "ic"
               ? "https://identity.ic0.app/#authorize"
-              : `http://localhost:4943?canisterId=${process.env.CANISTER_ID_INTERNET_IDENTITY}`,
+              : `http://localhost:4943?canisterId=${process.env.REACT_APP_IDEA_VAULT_CANISTER}#authorize`,
           onSuccess: resolve,
           onError: reject,
         });
       });
       await get().initialize();
       toast.success('Login successful!');
-    } catch (error) {
+    } catch {
       toast.error('Login failed. Please try again.');
       set({ loading: false });
     }
@@ -65,13 +56,9 @@ export const useAuthStore = create((set, get) => ({
     try {
       const authClient = await AuthClient.create();
       await authClient.logout();
-      set({
-        isAuthenticated: false,
-        principal: null,
-        actor: null,
-      });
+      set({ isAuthenticated: false, principal: null, actor: null });
       toast.success('Logged out successfully.');
-    } catch (error) {
+    } catch {
       toast.error('Logout failed.');
     }
   },

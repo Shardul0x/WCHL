@@ -13,7 +13,7 @@
         "entrypoint": "src/creative_vault_frontend/index.html"
       },
       "source": [
-        "src/creative_vault_frontend/"
+        "dist/creative_vault_frontend/"
       ],
       "type": "assets"
     }
@@ -22,14 +22,6 @@
     "local": {
       "bind": "127.0.0.1:4944",
       "type": "ephemeral"
-    },
-    "ic": {
-      "providers": ["https://ic0.app"],
-      "type": "persistent"
-    },
-    "testnet": {
-      "providers": ["https://ic0.app"],
-      "type": "persistent"
     }
   },
   "defaults": {
