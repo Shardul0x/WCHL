@@ -1,65 +1,72 @@
 import { create } from 'zustand';
-import { AuthClient } from '@dfinity/auth-client';
-import { createActor } from '../../../declarations/idea_vault';
+import { AnonymousIdentity } from '@dfinity/agent';
 import toast from 'react-hot-toast';
+
+import { createActor } from '../../../declarations/idea_vault';
+
+const canisterId = process.env.CANISTER_ID_IDEA_VAULT;
+
+if (!canisterId) {
+  console.error("⚠️ CANISTER_ID_IDEA_VAULT not found in environment");
+}
+
+const anonymousIdentity = new AnonymousIdentity();
+const anonymousPrincipal = anonymousIdentity.getPrincipal();
+
+const createDefaultActor = () => {
+  if (!canisterId) {
+    console.error("Cannot create actor: canister ID is missing");
+    return null;
+  }
+  
+  const agentOptions = {
+    host: process.env.DFX_NETWORK === 'ic'
+      ? 'https://ic0.app'
+      : 'http://127.0.0.1:4944',
+    identity: anonymousIdentity,
+  };
+
+  return createActor(canisterId, { agentOptions });
+};
 
 export const useAuthStore = create((set, get) => ({
   isAuthenticated: false,
-  principal: null,
+  principal: anonymousPrincipal,
   actor: null,
-  loading: true,
+  loading: false,
 
   initialize: async () => {
+    set({ loading: true });
     try {
-      const authClient = await AuthClient.create();
-      const isAuthenticated = await authClient.isAuthenticated();
-      const identity = authClient.getIdentity();
-      const principal = identity.getPrincipal();
+      const actor = createDefaultActor();
+      
+      if (!actor) {
+        throw new Error('Failed to create actor - check canister ID configuration');
+      }
 
-      const canisterId = process.env.REACT_APP_IDEA_VAULT_CANISTER;
-      if (!canisterId) throw new Error("REACT_APP_IDEA_VAULT_CANISTER not set");
-
-      const actor = createActor(canisterId, {
-        agentOptions: { identity },
+      // Don't call getStats - just create the actor
+      set({ 
+        actor, 
+        isAuthenticated: false,
+        loading: false 
       });
-
-      set({ isAuthenticated, principal, actor, loading: false });
+      
+      console.log('✅ Actor initialized successfully');
+      console.log('📍 Principal:', anonymousPrincipal.toText());
     } catch (error) {
-      toast.error(`Initialization failed: ${error.message}`);
+      console.error('❌ Failed to initialize actor:', error);
+      toast.error('Failed to connect to blockchain. Please check your local replica.');
       set({ loading: false });
     }
   },
 
   login: async () => {
-    set({ loading: true });
-    try {
-      const authClient = await AuthClient.create();
-      await new Promise((resolve, reject) => {
-        authClient.login({
-          identityProvider:
-            process.env.REACT_APP_DFX_NETWORK === "ic"
-              ? "https://identity.ic0.app/#authorize"
-              : `http://localhost:4943?canisterId=${process.env.REACT_APP_IDEA_VAULT_CANISTER}#authorize`,
-          onSuccess: resolve,
-          onError: reject,
-        });
-      });
-      await get().initialize();
-      toast.success('Login successful!');
-    } catch {
-      toast.error('Login failed. Please try again.');
-      set({ loading: false });
-    }
+    set({ isAuthenticated: true });
+    toast.success('Connected to blockchain!');
   },
 
   logout: async () => {
-    try {
-      const authClient = await AuthClient.create();
-      await authClient.logout();
-      set({ isAuthenticated: false, principal: null, actor: null });
-      toast.success('Logged out successfully.');
-    } catch {
-      toast.error('Logout failed.');
-    }
+    set({ isAuthenticated: false });
+    toast.info('Disconnected from blockchain');
   },
 }));

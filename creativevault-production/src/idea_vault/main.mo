@@ -263,15 +263,15 @@ persistent actor CreativeVault {
     };
     
     // Get user's ideas
-    public query(msg) func getUserIdeas(): async [Idea] {
+    public shared(msg) func getUserIdeas(): async [Idea] {
         let caller = msg.caller;
         let userIdeaIds = Option.get(userIdeas.get(caller), []);
         
-        Array.mapFilter<Text, Idea>(userIdeaIds, func(id) {
+        Array.mapFilter<Text, Idea>(userIdeaIds, func(id: Text) : ?Idea {
             ideas.get(id)
         })
     };
-    
+        
     // Get public feed with filtering
     public query func getPublicFeed(limit: ?Nat, category: ?Text, tags: [Text]): async [Idea] {
         let maxLimit = Option.get(limit, 20);
@@ -350,7 +350,7 @@ persistent actor CreativeVault {
     };
     
     // Get user profile
-    public query(msg) func getUserProfile(): async Result.Result<UserProfile, Text> {
+    public shared(msg) func getUserProfile(): async Result.Result<UserProfile, Text> {
         let caller = msg.caller;
         switch (userProfiles.get(caller)) {
             case null { #err("User profile not found") };

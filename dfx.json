@@ -3,29 +3,29 @@
   "canisters": {
     "idea_vault": {
       "type": "motoko",
-      "main": "src/idea_vault/main.mo"
+      "main": "creativevault-production/src/idea_vault/main.mo"
     },
     "creative_vault_frontend": {
       "dependencies": [
         "idea_vault"
       ],
       "frontend": {
-        "entrypoint": "src/creative_vault_frontend/index.html"
+        "entrypoint": "creativevault-production/src/creative_vault_frontend/index.html"
       },
       "source": [
-        "src/creative_vault_frontend/"
+        "creativevault-production/dist/creative_vault_frontend/"
       ],
       "type": "assets"
     }
+  },
+  "declarations": {
+    "output": "creativevault-production/src/declarations",
+    "node_compatibility": true
   },
   "networks": {
     "local": {
       "bind": "127.0.0.1:4944",
       "type": "ephemeral"
-    },
-    "ic": {
-      "providers": ["https://ic0.app"],
-      "type": "persistent"
     }
   },
   "defaults": {

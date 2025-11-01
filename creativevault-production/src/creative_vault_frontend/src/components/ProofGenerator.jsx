@@ -1,54 +1,106 @@
 import React, { useState } from 'react';
-import { Download, Search, Shield, CheckCircle, FileText, Hash, Zap } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { Download, Search, Shield, CheckCircle, FileText, Hash, Clock, Loader2, AlertCircle } from 'lucide-react';
 
 const ProofGenerator = () => {
+  const { actor, principal } = useAuthStore();
   const [ideaId, setIdeaId] = useState('');
   const [proofRecord, setProofRecord] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  // Preserved exact generateProof functionality
   const generateProof = async () => {
     if (!ideaId.trim()) return;
     
     setLoading(true);
-    // Simulate API call (preserved exact timing and logic)
-    setTimeout(() => {
-      const mockProof = {
-        ideaId: ideaId,
-        proofHash: 'sha256:' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15),
-        timestamp: Date.now() - Math.random() * 86400000,
-        creator: 'demo123...xyz',
-        isVerified: true,
-        title: 'AI-Powered Music Composition App',
-        status: 'Public',
-        blockchainTx: '0x' + Math.random().toString(16).substring(2, 15) + Math.random().toString(16).substring(2, 15)
+    setError('');
+    setProofRecord(null);
+
+    try {
+      const result = await actor.getIdea(ideaId);
+      
+      if ('err' in result) {
+        setError(result.err);
+        setLoading(false);
+        return;
+      }
+
+      const ideaData = result.ok;
+      
+      const proof = {
+        ideaId: ideaData.id,
+        title: ideaData.title,
+        description: ideaData.description,
+        creator: ideaData.creator.toText(),
+        timestamp: ideaData.timestamp, // Keep as BigInt for display
+        timestampString: ideaData.timestamp.toString(), // Convert for JSON
+        status: Object.keys(ideaData.status)[0],
+        proofHash: ideaData.proofHash,
+        category: ideaData.category,
+        tags: ideaData.tags,
+        version: Number(ideaData.version), // Convert BigInt to Number
+        ipfsHash: ideaData.ipfsHash.length > 0 ? ideaData.ipfsHash[0] : null,
+        isVerified: true
       };
-      setProofRecord(mockProof);
+      
+      setProofRecord(proof);
       setLoading(false);
-    }, 1200);
+    } catch (err) {
+      console.error('Error fetching idea:', err);
+      setError('Failed to fetch idea. Please try again.');
+      setLoading(false);
+    }
   };
 
-  // Preserved exact downloadProof functionality
+  const formatDate = (timestamp) => {
+    try {
+      const milliseconds = Number(timestamp) / 1_000_000;
+      return new Date(milliseconds).toLocaleString();
+    } catch (error) {
+      return 'Invalid date';
+    }
+  };
+
   const downloadProof = () => {
     if (!proofRecord) return;
-    
+
+    // Convert all BigInt values to strings for JSON serialization
     const proofData = {
-      ...proofRecord,
-      generatedAt: new Date().toISOString(),
-      platform: "CreativeVault",
-      version: "1.0.0",
       certificate: {
         type: "Idea Ownership Certificate",
-        description: "This certificate proves ownership and timestamp of the creative idea",
+        description: "This certificate proves ownership and timestamp of the creative idea on the Internet Computer blockchain",
         legalNotice: "This document can be used as evidence in intellectual property disputes"
-      }
+      },
+      idea: {
+        id: proofRecord.ideaId,
+        title: proofRecord.title,
+        description: proofRecord.description,
+        category: proofRecord.category,
+        tags: proofRecord.tags,
+        status: proofRecord.status
+      },
+      blockchain: {
+        creator: proofRecord.creator,
+        timestamp: formatDate(proofRecord.timestamp),
+        timestampNanoseconds: proofRecord.timestampString, // Use string version
+        proofHash: proofRecord.proofHash,
+        version: proofRecord.version,
+        ipfsHash: proofRecord.ipfsHash
+      },
+      verification: {
+        isVerified: proofRecord.isVerified,
+        platform: "ProofMint - Internet Computer",
+        network: "Internet Computer Blockchain"
+      },
+      generatedAt: new Date().toISOString(),
+      generatedBy: principal.toText()
     };
-    
+
     const blob = new Blob([JSON.stringify(proofData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `creativevault-proof-${proofRecord.ideaId}.json`;
+    a.download = `proofmint-certificate-${proofRecord.ideaId}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -57,115 +109,140 @@ const ProofGenerator = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center mb-4">
-          <div className="relative">
-            <FileText className="h-12 w-12 text-cyan-400" />
-            <Zap className="h-5 w-5 text-yellow-400 absolute -top-1 -right-1" />
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 p-8">
+        <div className="flex items-center space-x-3 mb-6">
+          <Shield className="w-10 h-10 text-yellow-400" />
+          <div>
+            <h2 className="text-2xl font-bold text-white">Generate Proof Certificate</h2>
+            <p className="text-gray-400 text-sm">Create verifiable proof of your idea ownership</p>
           </div>
         </div>
-        <h2 className="text-3xl font-bold text-white mb-2">Generate Proof Certificate</h2>
-        <p className="text-slate-400">Create verifiable proof of your idea ownership</p>
-      </div>
 
-      {/* Preserved exact input and generate section */}
-      <div className="glass-card mb-8">
-        <label className="block text-sm font-medium text-slate-300 mb-2">
-          Idea ID
-        </label>
-        <p className="text-xs text-slate-400 mb-4">
-          Enter the ID of an idea you want to generate a proof certificate for
-        </p>
-        <div className="flex gap-3">
+        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4 mb-6">
+          <p className="text-sm text-blue-300">
+            Enter the ID of an idea you want to generate a proof certificate for. The certificate contains blockchain-verified data.
+          </p>
+        </div>
+
+        <div className="flex space-x-3 mb-6">
           <input
             type="text"
             value={ideaId}
             onChange={(e) => setIdeaId(e.target.value)}
-            placeholder="idea_1701234567890"
-            className="input-field-enhanced flex-1 font-mono"
+            placeholder="Enter idea ID (e.g., idea_0)"
+            className="flex-1 px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
           />
           <button
             onClick={generateProof}
             disabled={loading || !ideaId.trim()}
-            className="btn-primary-gradient px-6"
+            className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-600 text-white rounded-lg font-medium hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
           >
             {loading ? (
-              <div className="flex items-center">
-                <div className="spinner mr-2"></div>
-                Generating...
-              </div>
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Loading...</span>
+              </>
             ) : (
               <>
-                <Search className="h-4 w-4 mr-2" />
-                Generate Proof
+                <Search className="w-5 h-5" />
+                <span>Generate</span>
               </>
             )}
           </button>
         </div>
-      </div>
 
-      {/* Preserved exact proof record display */}
-      {proofRecord && (
-        <div className="glass-card">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white">Proof Certificate</h3>
-            <div className="flex items-center space-x-2">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              <span className="text-green-400 text-sm font-medium">Verified</span>
-            </div>
+        {error && (
+          <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-6 flex items-center space-x-3">
+            <AlertCircle className="w-5 h-5 text-red-400" />
+            <p className="text-red-300">{error}</p>
           </div>
+        )}
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Idea ID</label>
-                <code className="text-cyan-400 font-mono text-sm">{proofRecord.ideaId}</code>
+        {proofRecord && (
+          <div className="bg-slate-700/50 border border-slate-600 rounded-xl p-6 space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-6 h-6 text-green-400" />
+                <span className="text-lg font-semibold text-white">Proof Record Found</span>
               </div>
-              
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Creator</label>
-                <code className="text-slate-300 font-mono text-sm">{proofRecord.creator}</code>
+              <button
+                onClick={downloadProof}
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Certificate</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-slate-800/50 p-4 rounded-lg">
+                <p className="text-xs text-gray-400 mb-1">Idea ID</p>
+                <code className="text-sm text-yellow-400 font-mono">{proofRecord.ideaId}</code>
               </div>
-              
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Status</label>
-                <div className="flex items-center">
-                  <CheckCircle className="h-4 w-4 text-green-400 mr-2" />
-                  <span className="text-green-400 text-sm">✅ {proofRecord.isVerified ? 'Verified' : 'Unverified'}</span>
+
+              <div className="bg-slate-800/50 p-4 rounded-lg">
+                <p className="text-xs text-gray-400 mb-1">Status</p>
+                <span className="text-sm text-green-400 font-medium">{proofRecord.status}</span>
+              </div>
+
+              <div className="bg-slate-800/50 p-4 rounded-lg">
+                <p className="text-xs text-gray-400 mb-1">Creator</p>
+                <code className="text-sm text-blue-400 font-mono break-all">{proofRecord.creator}</code>
+              </div>
+
+              <div className="bg-slate-800/50 p-4 rounded-lg">
+                <p className="text-xs text-gray-400 mb-1">Timestamp</p>
+                <span className="text-sm text-gray-300">{formatDate(proofRecord.timestamp)}</span>
+              </div>
+
+              <div className="bg-slate-800/50 p-4 rounded-lg">
+                <p className="text-xs text-gray-400 mb-1">Version</p>
+                <span className="text-sm text-gray-300">v{proofRecord.version}</span>
+              </div>
+
+              <div className="bg-slate-800/50 p-4 rounded-lg">
+                <p className="text-xs text-gray-400 mb-1">Category</p>
+                <span className="text-sm text-indigo-400">{proofRecord.category}</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-800/50 p-4 rounded-lg">
+              <p className="text-xs text-gray-400 mb-1">Title</p>
+              <h3 className="text-lg font-semibold text-white">{proofRecord.title}</h3>
+            </div>
+
+            <div className="bg-slate-800/50 p-4 rounded-lg">
+              <p className="text-xs text-gray-400 mb-1">Description</p>
+              <p className="text-sm text-gray-300 whitespace-pre-wrap">{proofRecord.description}</p>
+            </div>
+
+            {proofRecord.tags && proofRecord.tags.length > 0 && (
+              <div className="bg-slate-800/50 p-4 rounded-lg">
+                <p className="text-xs text-gray-400 mb-2">Tags</p>
+                <div className="flex flex-wrap gap-2">
+                  {proofRecord.tags.map((tag, idx) => (
+                    <span key={idx} className="px-2 py-1 bg-slate-700 text-gray-300 rounded text-xs">
+                      #{tag}
+                    </span>
+                  ))}
                 </div>
               </div>
+            )}
+
+            <div className="bg-slate-800/50 p-4 rounded-lg">
+              <p className="text-xs text-gray-400 mb-2">Blockchain Proof Hash</p>
+              <code className="text-sm text-yellow-400 font-mono break-all">{proofRecord.proofHash}</code>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Timestamp</label>
-                <span className="text-slate-300 text-sm">{new Date(proofRecord.timestamp).toLocaleString()}</span>
+            {proofRecord.ipfsHash && (
+              <div className="bg-slate-800/50 p-4 rounded-lg">
+                <p className="text-xs text-gray-400 mb-2">IPFS Hash</p>
+                <code className="text-sm text-blue-400 font-mono break-all">{proofRecord.ipfsHash}</code>
               </div>
-              
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Blockchain Transaction</label>
-                <code className="text-cyan-400 font-mono text-sm">{proofRecord.blockchainTx}</code>
-              </div>
-              
-              <div>
-                <label className="text-xs text-slate-400 block mb-1">Proof Hash</label>
-                <code className="text-cyan-400 font-mono text-sm break-all">{proofRecord.proofHash}</code>
-              </div>
-            </div>
+            )}
           </div>
-
-          {/* Preserved exact download functionality */}
-          <div className="mt-8 pt-6 border-t border-slate-700/50">
-            <button
-              onClick={downloadProof}
-              className="btn-primary-gradient w-full"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download Certificate (JSON)
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

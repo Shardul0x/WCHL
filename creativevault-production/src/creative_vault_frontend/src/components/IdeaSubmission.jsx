@@ -1,250 +1,274 @@
 import React, { useState } from 'react';
-import { FileText, Upload, Lock, Globe, Clock, Zap, Shield, CheckCircle, Info } from 'lucide-react';
+import { useAuthStore } from '../store/authStore';
+import { useIdeaStore } from '../store/ideaStore';
+import { FileText, Upload, Lock, Globe, Clock, Zap, Shield, CheckCircle, Info, Loader2 } from 'lucide-react';
 
 const IdeaSubmission = () => {
+  const { actor } = useAuthStore();
+  const { submitIdea, loading: submitting } = useIdeaStore();
+  
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     status: 'Public',
-    ipfsHash: ''
+    ipfsHash: '',
+    tags: '',
+    category: 'General'
   });
-  const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.description) return;
+    
+    if (!formData.title || !formData.description) {
+      return;
+    }
 
-    setLoading(true);
-    setTimeout(() => {
-      const ideaId = `idea_${Date.now()}`;
-      setSuccess(`Idea submitted successfully! ID: ${ideaId}`);
-      setFormData({ title: '', description: '', status: 'Public', ipfsHash: '' });
-      setLoading(false);
-      setTimeout(() => setSuccess(''), 5000);
-    }, 1500);
+    if (!actor) {
+      console.error('Actor not available');
+      return;
+    }
+
+    try {
+      const tagsArray = formData.tags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
+
+      const ideaInput = {
+        title: formData.title,
+        description: formData.description,
+        status: { [formData.status]: null },
+        ipfsHash: formData.ipfsHash ? [formData.ipfsHash] : [],
+        tags: tagsArray,
+        category: formData.category
+      };
+
+      const ideaId = await submitIdea(actor, ideaInput);
+
+      if (ideaId) {
+        setFormData({
+          title: '',
+          description: '',
+          status: 'Public',
+          ipfsHash: '',
+          tags: '',
+          category: 'General'
+        });
+      }
+    } catch (error) {
+      console.error('Submission error:', error);
+    }
   };
 
   const statusOptions = [
-    { 
-      value: 'Public', 
-      icon: Globe, 
-      label: 'Public', 
+    {
+      value: 'Public',
+      icon: Globe,
+      label: 'Public',
       desc: 'Visible to everyone immediately',
       badge: 'Open Source'
     },
-    { 
-      value: 'Private', 
-      icon: Lock, 
-      label: 'Private', 
+    {
+      value: 'Private',
+      icon: Lock,
+      label: 'Private',
       desc: 'Only visible to you',
       badge: 'Confidential'
     },
-    { 
-      value: 'RevealLater', 
-      icon: Clock, 
-      label: 'Reveal Later', 
-      desc: 'Timestamped but hidden until revealed',
-      badge: 'Scheduled'
+    {
+      value: 'RevealLater',
+      icon: Clock,
+      label: 'Reveal Later',
+      desc: 'Time-locked disclosure',
+      badge: 'Time-Lock'
     }
   ];
 
-  return (
-    <div className="page-container">
-      {/* Hero Header */}
-      <div className="page-hero">
-        <div className="hero-badge">
-          <Shield className="hero-badge-icon" />
-          <span>Blockchain Protected</span>
-        </div>
-        <h1 className="hero-title">Submit New Idea</h1>
-        <p className="hero-subtitle">
-          Secure your intellectual property with immutable blockchain timestamps and cryptographic proof
-        </p>
-      </div>
+  const categories = [
+    'General',
+    'Technology',
+    'Art',
+    'Music',
+    'Writing',
+    'Design',
+    'Science',
+    'Business',
+    'Other'
+  ];
 
-      {/* Success Alert */}
-      {success && (
-        <div className="success-banner">
-          <CheckCircle className="success-icon" />
-          <div className="success-content">
-            <div className="success-title">Success!</div>
-            <div className="success-message">{success}</div>
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-yellow-500 to-orange-600 px-8 py-6">
+          <div className="flex items-center space-x-3">
+            <Shield className="w-8 h-8 text-white" />
+            <div>
+              <h2 className="text-2xl font-bold text-white">Submit Your Idea</h2>
+              <p className="text-yellow-100 text-sm">Protect your intellectual property on the blockchain</p>
+            </div>
           </div>
         </div>
-      )}
 
-      <div className="content-grid">
-        {/* Main Form */}
-        <div className="form-panel">
-          <form onSubmit={handleSubmit} className="idea-form">
-            {/* Title Section */}
-            <div className="form-group">
-              <div className="label-row">
-                <label className="field-label">Idea Title</label>
-                <span className="required-badge">Required</span>
-              </div>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-                className="text-input"
-                placeholder="Enter your creative idea title..."
-                required
-              />
-              <p className="field-hint">Make it descriptive and memorable</p>
-            </div>
-
-            {/* Description Section */}
-            <div className="form-group">
-              <div className="label-row">
-                <label className="field-label">Detailed Description</label>
-                <span className="required-badge">Required</span>
-              </div>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                rows="8"
-                className="text-area"
-                placeholder="Describe your creative idea in detail. Include key concepts, implementation details, unique features, or artistic vision..."
-                required
-              />
-              <p className="field-hint">The more detail you provide, the stronger your protection will be</p>
-            </div>
-
-            {/* Privacy Settings */}
-            <div className="form-group">
-              <label className="field-label">Privacy Setting</label>
-              <div className="privacy-cards">
-                {statusOptions.map(option => {
-                  const Icon = option.icon;
-                  const isSelected = formData.status === option.value;
-                  return (
-                    <label key={option.value} className="privacy-card-wrapper">
-                      <input
-                        type="radio"
-                        name="status"
-                        value={option.value}
-                        checked={isSelected}
-                        onChange={(e) => setFormData({...formData, status: e.target.value})}
-                        className="privacy-input"
-                      />
-                      <div className={`privacy-card ${isSelected ? 'selected' : ''}`}>
-                        <div className="privacy-header">
-                          <Icon className="privacy-icon" />
-                          <span className="privacy-badge">{option.badge}</span>
-                        </div>
-                        <div className="privacy-title">{option.label}</div>
-                        <div className="privacy-description">{option.desc}</div>
-                      </div>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* IPFS Section */}
-            <div className="form-group">
-              <div className="label-row">
-                <label className="field-label">IPFS Hash</label>
-                <span className="optional-badge">Optional</span>
-              </div>
-              <input
-                type="text"
-                value={formData.ipfsHash}
-                onChange={(e) => setFormData({...formData, ipfsHash: e.target.value})}
-                className="text-input mono-font"
-                placeholder="QmXxXxXx... (for files uploaded to IPFS)"
-              />
-              <p className="field-hint">
-                Upload files to IPFS and paste the hash here for additional verification
+        {/* Info Banner */}
+        <div className="bg-blue-500/10 border-b border-blue-500/30 px-8 py-4">
+          <div className="flex items-start space-x-3">
+            <Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
+            <div className="text-sm text-blue-300">
+              <p className="font-medium">How it works:</p>
+              <p className="text-blue-400 mt-1">
+                Your idea will be timestamped and stored immutably on the Internet Computer blockchain.
+                This creates verifiable proof of creation that can be used for intellectual property protection.
               </p>
             </div>
-
-            {/* Submit Section */}
-            <div className="submit-section">
-              <button
-                type="submit"
-                disabled={loading || !formData.title || !formData.description}
-                className="submit-btn"
-              >
-                {loading ? (
-                  <>
-                    <div className="loading-spinner"></div>
-                    <span>Securing Your Idea...</span>
-                  </>
-                ) : (
-                  <>
-                    <Shield className="submit-icon" />
-                    <span>Submit & Timestamp Idea</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+          </div>
         </div>
 
-        {/* Info Sidebar */}
-        <div className="info-sidebar">
-          <div className="info-card">
-            <div className="info-header">
-              <Info className="info-icon" />
-              <h3 className="info-title">How It Works</h3>
-            </div>
-            
-            <div className="process-steps">
-              <div className="step">
-                <div className="step-number">1</div>
-                <div className="step-content">
-                  <h4 className="step-title">Cryptographic Hash</h4>
-                  <p className="step-desc">Your idea is converted into a unique cryptographic fingerprint</p>
-                </div>
-              </div>
-              
-              <div className="step">
-                <div className="step-number">2</div>
-                <div className="step-content">
-                  <h4 className="step-title">Blockchain Timestamp</h4>
-                  <p className="step-desc">The hash is timestamped on an immutable blockchain network</p>
-                </div>
-              </div>
-              
-              <div className="step">
-                <div className="step-number">3</div>
-                <div className="step-content">
-                  <h4 className="step-title">Proof Generation</h4>
-                  <p className="step-desc">A verifiable certificate of ownership and creation date is created</p>
-                </div>
-              </div>
-              
-              <div className="step">
-                <div className="step-number">4</div>
-                <div className="step-content">
-                  <h4 className="step-title">Legal Protection</h4>
-                  <p className="step-desc">Use your proof certificate for patent applications and legal disputes</p>
-                </div>
-              </div>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          {/* Title */}
+          <div>
+            <label className="flex items-center text-sm font-semibold text-gray-200 mb-2">
+              <FileText className="w-4 h-4 mr-2 text-yellow-400" />
+              Idea Title
+            </label>
+            <input
+              type="text"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              placeholder="Enter a descriptive title for your idea"
+              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+              required
+              disabled={submitting}
+            />
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="flex items-center text-sm font-semibold text-gray-200 mb-2">
+              <FileText className="w-4 h-4 mr-2 text-yellow-400" />
+              Description
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              placeholder="Describe your idea in detail..."
+              rows="6"
+              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all resize-none"
+              required
+              disabled={submitting}
+            />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="flex items-center text-sm font-semibold text-gray-200 mb-2">
+              <Zap className="w-4 h-4 mr-2 text-yellow-400" />
+              Category
+            </label>
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+              disabled={submitting}
+            >
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="flex items-center text-sm font-semibold text-gray-200 mb-2">
+              <Zap className="w-4 h-4 mr-2 text-yellow-400" />
+              Tags (comma-separated)
+            </label>
+            <input
+              type="text"
+              value={formData.tags}
+              onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+              placeholder="e.g., innovation, tech, patent"
+              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+              disabled={submitting}
+            />
+          </div>
+
+          {/* Privacy Status */}
+          <div>
+            <label className="text-sm font-semibold text-gray-200 mb-3 block">
+              Privacy Settings
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {statusOptions.map(({ value, icon: Icon, label, desc, badge }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setFormData({ ...formData, status: value })}
+                  disabled={submitting}
+                  className={`relative p-4 rounded-xl border-2 transition-all text-left ${
+                    formData.status === value
+                      ? 'border-yellow-500 bg-yellow-500/10 shadow-lg'
+                      : 'border-slate-600 hover:border-yellow-400/50 bg-slate-700/30'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <Icon className={`w-5 h-5 ${formData.status === value ? 'text-yellow-400' : 'text-gray-400'}`} />
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                      formData.status === value
+                        ? 'bg-yellow-500 text-black'
+                        : 'bg-slate-600 text-gray-300'
+                    }`}>
+                      {badge}
+                    </span>
+                  </div>
+                  <h3 className={`font-semibold mb-1 ${formData.status === value ? 'text-yellow-300' : 'text-gray-300'}`}>
+                    {label}
+                  </h3>
+                  <p className="text-xs text-gray-400">{desc}</p>
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="security-features">
-            <h4 className="features-title">Security Features</h4>
-            <div className="feature-list">
-              <div className="feature-item">
-                <Shield className="feature-icon" />
-                <span>256-bit encryption</span>
-              </div>
-              <div className="feature-item">
-                <Lock className="feature-icon" />
-                <span>Immutable timestamps</span>
-              </div>
-              <div className="feature-item">
-                <Zap className="feature-icon" />
-                <span>Instant verification</span>
-              </div>
-            </div>
+          {/* IPFS Hash */}
+          <div>
+            <label className="flex items-center text-sm font-semibold text-gray-200 mb-2">
+              <Upload className="w-4 h-4 mr-2 text-yellow-400" />
+              IPFS Hash (Optional)
+            </label>
+            <input
+              type="text"
+              value={formData.ipfsHash}
+              onChange={(e) => setFormData({ ...formData, ipfsHash: e.target.value })}
+              placeholder="Enter IPFS hash if you've uploaded supporting files"
+              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-yellow-500 focus:border-transparent transition-all"
+              disabled={submitting}
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Link to additional files stored on IPFS for enhanced proof
+            </p>
           </div>
-        </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={submitting || !formData.title || !formData.description}
+            className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Submitting to Blockchain...</span>
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-5 h-5" />
+                <span>Submit & Protect Idea</span>
+              </>
+            )}
+          </button>
+        </form>
       </div>
     </div>
   );

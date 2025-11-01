@@ -1,5 +1,5 @@
 {
-  "replica_rev": "e915efecc8af90993ccfc499721ebe826aadba60",
+  "replica_rev": "3418c975f63f180ecf19886c5e757a3c33d72f4e",
   "effective_canister_id": "uqqxf-5h777-77774-qaaaa-cai",
   "type": "pocket_ic",
   "config": {
@@ -8,13 +8,13 @@
       "write_port_to": null
     },
     "state_manager": {
-      "state_root": "/mnt/e/WHCL/.dfx/network/local/state/replicated_state"
+      "state_root": "/mnt/e/WHCl/.dfx/network/local/state/replicated_state"
     },
     "crypto": {
-      "crypto_root": "/mnt/e/WHCL/.dfx/network/local/state/crypto_store"
+      "crypto_root": "/mnt/e/WHCl/.dfx/network/local/state/crypto_store"
     },
     "artifact_pool": {
-      "consensus_pool_path": "/mnt/e/WHCL/.dfx/network/local/state/consensus_pool"
+      "consensus_pool_path": "/mnt/e/WHCl/.dfx/network/local/state/consensus_pool"
     },
     "subnet_type": "application",
     "btc_adapter": {

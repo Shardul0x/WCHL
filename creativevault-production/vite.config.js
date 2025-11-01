@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '..', '');
+  // This is the fix: Change process.cwd() to '..'
+  const env = loadEnv(mode, '..', ''); 
 
   return {
     plugins: [react()],
@@ -15,13 +16,6 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: true,
-      // The proxy configuration
-      proxy: {
-        '/api': {
-          target: 'http://127.0.0.1:4944',
-          changeOrigin: true,
-        },
-      },
     },
     define: {
       global: 'globalThis',
