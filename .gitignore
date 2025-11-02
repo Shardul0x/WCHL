@@ -1,46 +1,47 @@
-# Node modules - Never commit these!
+# Dependencies
 node_modules/
-creativevault-production/node_modules/
-*.npm
+*/node_modules/
+**/node_modules/
+.pnp
+.pnp.js
 package-lock.json
 
-# DFX cache and build outputs
+# DFX
 .dfx/
+.ic-assets.json
+canister_ids.json
+
+# Build outputs
 dist/
 build/
+*/dist/
+*/build/
+.vite/
+.cache/
 
-# Environment variables
+# Environment
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
-# Dependencies
-.pnp
-.pnp.js
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-.DS_Store
-
-# Build outputs
-creativevault-production/dist/
-creativevault-production/.vite/
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-*.log
 
 # OS
-Thumbs.db
 .DS_Store
+Thumbs.db
 
-# Caches
-.cache/
-.eslintcache
+# Testing
+coverage/
+.nyc_output/
